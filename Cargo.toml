@@ -1,0 +1,10 @@
+[package]
+name = "adventofcode"
+version = "0.1.0"
+authors = ["Fiona Corden <fiona.corden@metaswitch.com>"]
+edition = "2018"
+publish = ["metaswitch"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
