@@ -35,19 +35,18 @@ fn find_total_fuel_for_modules(module_only: bool) -> i32 {
     total_fuel
 }
 
-fn calculate_module_fuel(module_mass: i32) -> i32 {
+fn calculate_module_fuel(mut mass: i32) -> i32 {
     let mut module_fuel = 0;
-    let mut mass = module_mass;
 
-    while mass > 0 {
+    loop {
         let fuel_for_mass = calculate_fuel_for_mass(mass);
-        if fuel_for_mass > 0 {
+        if fuel_for_mass <= 0 {
+            return module_fuel;
+        } else {
             module_fuel = module_fuel + fuel_for_mass;
+            mass = fuel_for_mass;
         }
-        mass = fuel_for_mass;
     }
-
-    module_fuel
 }
 
 fn calculate_fuel_for_mass(mass: i32) -> i32 {
