@@ -1,27 +1,46 @@
 pub fn run_a() {
     // Read the input file as a string and create computer.
-    let input = std::fs::read_to_string("input_2.txt").expect("Unable to read file");
-    let mut intcomp = Intcomp::from(&input);
+    let mut intcomp = Intcomp::from_file("input_2.txt");
 
     // Restore 1202 state
-    intcomp.register[1] = 12;
-    intcomp.register[2] = 2;
+    intcomp.memory[1] = 12;
+    intcomp.memory[2] = 2;
 
     // Get result
     intcomp.execute();
-    println!("Result: {} ", intcomp.register[0]);
+    println!("2a Result: {} ", intcomp.memory[0]);
+}
+
+pub fn run_b() {
+    let intcomp = Intcomp::from_file("input_2.txt");
+    const TARGET: i32 = 19_690_720;
+
+    for noun in 0..99 {
+        for verb in 0..99 {
+            let mut loop_intcomp = intcomp.clone();
+            loop_intcomp.memory[1] = noun;
+            loop_intcomp.memory[2] = verb;
+            loop_intcomp.execute();
+
+            if loop_intcomp.memory[0] == TARGET {
+                let result = 100 * noun + verb;
+                println!("2b Result: {}", result);
+                return;
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 struct Intcomp {
-    pub register: Vec<i32>,
+    pub memory: Vec<i32>,
 }
 
 impl Intcomp {
-    pub fn from(input: &str) -> Self {
+    pub fn from(program: &str) -> Self {
         Self {
             // Convert input string to array of i32
-            register: input
+            memory: program
                 .trim()
                 .split(',')
                 .map(|s| s.parse().unwrap())
@@ -29,15 +48,20 @@ impl Intcomp {
         }
     }
 
+    pub fn from_file(filename: &str) -> Self {
+        let program = std::fs::read_to_string(filename).expect("Unable to read file");
+        Intcomp::from(&program)
+    }
+
     pub fn execute(&mut self) {
-        let mut opcode_position = 0;
+        let mut instruction_ptr = 0;
         loop {
-            let opcode = self.register[opcode_position];
-            let pos_a = self.register[opcode_position + 1] as usize;
-            let val_a = self.register[pos_a];
-            let pos_b = self.register[opcode_position + 2] as usize;
-            let val_b = self.register[pos_b];
-            let location = self.register[opcode_position + 3];
+            let opcode = self.memory[instruction_ptr];
+            let pos_a = self.memory[instruction_ptr + 1] as usize;
+            let val_a = self.memory[pos_a];
+            let pos_b = self.memory[instruction_ptr + 2] as usize;
+            let val_b = self.memory[pos_b];
+            let location = self.memory[instruction_ptr + 3];
 
             match opcode {
                 1 => self.store_calc_result(val_a + val_b, location),
@@ -46,11 +70,11 @@ impl Intcomp {
                 _ => panic!("Unknown opcode {}", opcode),
             }
 
-            opcode_position += 4;
+            instruction_ptr += 4;
 
             // Catch the case where program length is not divisible by 4
-            if (opcode_position + 4) > self.register.len() {
-                assert_eq!(self.register[opcode_position], 99);
+            if (instruction_ptr + 4) > self.memory.len() {
+                assert_eq!(self.memory[instruction_ptr], 99);
                 break;
             }
         }
@@ -58,11 +82,11 @@ impl Intcomp {
 
     fn store_calc_result(&mut self, result: i32, location: i32) {
         let res_location = location as usize;
-        self.register[res_location] = result;
+        self.memory[res_location] = result;
     }
 
-    pub fn string_from_register(self) -> String {
-        let vec_of_strings: Vec<_> = self.register.iter().map(|s| s.to_string()).collect();
+    pub fn string_from_memory(self) -> String {
+        let vec_of_strings: Vec<_> = self.memory.iter().map(|s| s.to_string()).collect();
         vec_of_strings.join(",")
     }
 }
@@ -76,7 +100,7 @@ mod tests {
         let execute_intcomp = |x| {
             let mut comp = Intcomp::from(x);
             comp.execute();
-            comp.string_from_register()
+            comp.string_from_memory()
         };
         assert_eq!("2,0,0,0,99", execute_intcomp("1,0,0,0,99"));
         assert_eq!("2,3,0,6,99", execute_intcomp("2,3,0,3,99"));
