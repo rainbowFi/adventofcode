@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{prelude::BufRead, BufReader};
 
 pub fn run_a() {
     println!("Running 1a");
@@ -14,7 +14,7 @@ pub fn run_b() {
 }
 
 fn find_total_fuel_for_modules(module_only: bool) -> i32 {
-    let file = File::open("input.txt").expect("Unable to open file");
+    let file = File::open("input_1.txt").expect("Unable to open file");
     let file = BufReader::new(file);
 
     let mut total_fuel = 0;
@@ -26,9 +26,9 @@ fn find_total_fuel_for_modules(module_only: bool) -> i32 {
         };
 
         if module_only {
-            total_fuel = total_fuel + calculate_fuel_for_mass(module_mass);
+            total_fuel += calculate_fuel_for_mass(module_mass);
         } else {
-            total_fuel = total_fuel + calculate_module_fuel(module_mass);
+            total_fuel += calculate_module_fuel(module_mass);
         }
     }
 
@@ -43,7 +43,7 @@ fn calculate_module_fuel(mut mass: i32) -> i32 {
         if fuel_for_mass <= 0 {
             return module_fuel;
         } else {
-            module_fuel = module_fuel + fuel_for_mass;
+            module_fuel += fuel_for_mass;
             mass = fuel_for_mass;
         }
     }
