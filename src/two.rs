@@ -1,3 +1,5 @@
+use crate::intcomp::*;
+
 pub fn run_a() {
     // Read the input file as a string and create computer.
     let mut intcomp = Intcomp::from_file("input_2.txt");
@@ -28,66 +30,6 @@ pub fn run_b() {
                 return;
             }
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Intcomp {
-    pub memory: Vec<i32>,
-}
-
-impl Intcomp {
-    pub fn from(program: &str) -> Self {
-        Self {
-            // Convert input string to array of i32
-            memory: program
-                .trim()
-                .split(',')
-                .map(|s| s.parse().unwrap())
-                .collect(),
-        }
-    }
-
-    pub fn from_file(filename: &str) -> Self {
-        let program = std::fs::read_to_string(filename).expect("Unable to read file");
-        Intcomp::from(&program)
-    }
-
-    pub fn execute(&mut self) {
-        let mut instruction_ptr = 0;
-        loop {
-            let opcode = self.memory[instruction_ptr];
-            let pos_a = self.memory[instruction_ptr + 1] as usize;
-            let val_a = self.memory[pos_a];
-            let pos_b = self.memory[instruction_ptr + 2] as usize;
-            let val_b = self.memory[pos_b];
-            let location = self.memory[instruction_ptr + 3];
-
-            match opcode {
-                1 => self.store_calc_result(val_a + val_b, location),
-                2 => self.store_calc_result(val_a * val_b, location),
-                99 => break,
-                _ => panic!("Unknown opcode {}", opcode),
-            }
-
-            instruction_ptr += 4;
-
-            // Catch the case where program length is not divisible by 4
-            if (instruction_ptr + 4) > self.memory.len() {
-                assert_eq!(self.memory[instruction_ptr], 99);
-                break;
-            }
-        }
-    }
-
-    fn store_calc_result(&mut self, result: i32, location: i32) {
-        let res_location = location as usize;
-        self.memory[res_location] = result;
-    }
-
-    pub fn string_from_memory(self) -> String {
-        let vec_of_strings: Vec<_> = self.memory.iter().map(|s| s.to_string()).collect();
-        vec_of_strings.join(",")
     }
 }
 

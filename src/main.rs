@@ -2,6 +2,8 @@ mod four;
 mod one;
 mod two;
 
+mod intcomp;
+
 fn main() {
     one::run_a();
     one::run_b();
