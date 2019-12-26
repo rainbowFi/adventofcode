@@ -113,6 +113,7 @@ impl Intcomp {
     }
 
     fn store_result(&mut self, result: i32, mode: i32) {
+        // Position - 0, Immediate - 1
         let position_value = self.memory[self.instruction_ptr];
         self.instruction_ptr += 1;
         let res_location = match mode {
