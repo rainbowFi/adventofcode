@@ -26,6 +26,12 @@ impl Intcomp {
         Intcomp::from(&program)
     }
 
+    pub fn run_with_input(&mut self, input: Vec<i32>) -> Vec<i32> {
+        self.input = input;
+        self.execute();
+        self.output.clone()
+    }
+
     pub fn execute(&mut self) {
         loop {
             // Opcode is last two decimal places of the field
