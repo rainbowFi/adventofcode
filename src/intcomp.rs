@@ -2,6 +2,7 @@
 pub struct Intcomp {
     pub memory: Vec<i32>,
     pub output: Vec<i32>,
+    pub input: Vec<i32>,
     instruction_ptr: usize,
 }
 
@@ -15,6 +16,7 @@ impl Intcomp {
                 .map(|s| s.parse().unwrap())
                 .collect(),
             output: vec![],
+            input: vec![],
             instruction_ptr: 0,
         }
     }
@@ -25,10 +27,6 @@ impl Intcomp {
     }
 
     pub fn execute(&mut self) {
-        self.execute_with_input(None);
-    }
-
-    pub fn execute_with_input(&mut self, input: Option<i32>) {
         loop {
             // Opcode is last two decimal places of the field
             let opcode = self.memory[self.instruction_ptr] % 100;
@@ -55,8 +53,14 @@ impl Intcomp {
                 }
                 3 => {
                     // Store input
-                    assert_ne!(input, None);
-                    self.store_result(input.unwrap(), mode_a);
+                    match self.input.pop() {
+                        Some(input) => {
+                            self.store_result(input, mode_a);
+                        }
+                        None => {
+                            panic!("Unexpected situation - no input");
+                        }
+                    }
                 }
                 4 => {
                     // Give output
@@ -135,7 +139,8 @@ mod tests {
 
     fn test_intcomp_with_input(program: &str, input: i32) -> Vec<i32> {
         let mut intcomp = Intcomp::from(program);
-        intcomp.execute_with_input(Some(input));
+        intcomp.input.push(input);
+        intcomp.execute();
         intcomp.output
     }
 
