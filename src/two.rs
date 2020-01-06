@@ -2,7 +2,7 @@ use crate::intcomp::*;
 
 pub fn run_a() {
     // Read the input file as a string and create computer.
-    let mut intcomp = Intcomp::from_file("input_2.txt");
+    let mut intcomp = Intcomp::from_file("inputs/input_2.txt");
 
     // Restore 1202 state
     intcomp.memory[1] = 12;
@@ -14,7 +14,7 @@ pub fn run_a() {
 }
 
 pub fn run_b() {
-    let intcomp = Intcomp::from_file("input_2.txt");
+    let intcomp = Intcomp::from_file("inputs/input_2.txt");
     const TARGET: i32 = 19_690_720;
 
     for noun in 0..99 {

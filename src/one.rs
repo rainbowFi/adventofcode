@@ -14,7 +14,7 @@ pub fn run_b() {
 }
 
 fn find_total_fuel_for_modules(module_only: bool) -> i32 {
-    let file = File::open("input_1.txt").expect("Unable to open file");
+    let file = File::open("inputs/input_1.txt").expect("Unable to open file");
     let file = BufReader::new(file);
 
     let mut total_fuel = 0;

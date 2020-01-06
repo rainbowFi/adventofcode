@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 pub fn run_a() {
-    let file = std::fs::read_to_string("input_6.txt").expect("Unable to open file");
+    let file = std::fs::read_to_string("inputs/input_6.txt").expect("Unable to open file");
     let num_orbits = total_orbits(&file);
     println!("6A: num orbits {}", num_orbits);
 }
 
 pub fn run_b() {
-    let file = std::fs::read_to_string("input_6.txt").expect("Unable to open file");
+    let file = std::fs::read_to_string("inputs/input_6.txt").expect("Unable to open file");
     let num_orbits = path_length(&file);
     println!("6B: num orbits {}", num_orbits);
 }
