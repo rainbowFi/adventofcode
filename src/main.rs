@@ -20,4 +20,5 @@ fn main() {
     six::run_a();
     six::run_b();
     seven::run_a();
+    seven::run_b();
 }

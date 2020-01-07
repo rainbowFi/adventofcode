@@ -1,15 +1,50 @@
 #[derive(Debug, Clone)]
+pub struct IntResult {
+    pub output: Vec<i64>,
+    pub memory: Vec<i64>,
+}
+
+#[derive(Debug, Clone)]
+pub enum IntResultCode {
+    Completed(IntResult),
+    MoreInputRequired(Intcomp),
+}
+
+pub use IntResultCode::*;
+
+impl IntResultCode {
+    pub fn get_output(&self) -> Vec<i64> {
+        match self {
+            Completed(result) => result.output.clone(),
+            MoreInputRequired(intcomp) => intcomp.output.clone(),
+        }
+    }
+
+    pub fn get_memory(&self) -> (Vec<i64>, String) {
+        match self {
+            Completed(result) => { (result.memory.clone(), self.string_from_memory(&result.memory)) },
+            MoreInputRequired(_) => panic!("No memory available"),
+        }
+    }
+
+    fn string_from_memory(&self, memory: &Vec<i64>) -> String {
+        let vec_of_strings: Vec<_> = memory.iter().map(|s| s.to_string()).collect();
+        vec_of_strings.join(",")
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Intcomp {
-    pub memory: Vec<i32>,
-    pub output: Vec<i32>,
-    pub input: Vec<i32>,
+    pub memory: Vec<i64>,
+    pub output: Vec<i64>,
+    pub input: Vec<i64>,
     instruction_ptr: usize,
 }
 
 impl Intcomp {
     pub fn from(program: &str) -> Self {
         Self {
-            // Convert input string to array of i32
+            // Convert input string to array of i64
             memory: program
                 .trim()
                 .split(',')
@@ -26,13 +61,13 @@ impl Intcomp {
         Intcomp::from(&program)
     }
 
-    pub fn run_with_input(&mut self, input: Vec<i32>) -> Vec<i32> {
+    pub fn run_with_input(mut self, input: Vec<i64>) -> IntResultCode {
         self.input = input;
-        self.execute();
-        self.output.clone()
+        self.output.clear();
+        self.execute()
     }
 
-    pub fn execute(&mut self) {
+    pub fn execute(mut self) -> IntResultCode {
         loop {
             // Opcode is last two decimal places of the field
             let opcode = self.memory[self.instruction_ptr] % 100;
@@ -58,13 +93,15 @@ impl Intcomp {
                     self.store_result(val_a * val_b, mode_c)
                 }
                 3 => {
-                    // Store input
+                    // Get input
                     match self.input.pop() {
                         Some(input) => {
                             self.store_result(input, mode_a);
                         }
                         None => {
-                            panic!("Unexpected situation - no input");
+                            // Need to come back to this same instruction
+                            self.instruction_ptr -= 1;
+                            return IntResultCode::MoreInputRequired(self)
                         }
                     }
                 }
@@ -101,15 +138,15 @@ impl Intcomp {
                     let val_b = self.get_param(mode_b);
                     self.store_result(if val_a == val_b { 1 } else { 0 }, mode_c);
                 }
-                99 => break,
+                99 => return IntResultCode::Completed(IntResult { output: self.output.clone(), memory: self.memory.clone() }),
                 _ => panic!("Unknown opcode {}", opcode),
             }
         }
     }
 
-    fn get_param(&mut self, mode: i32) -> i32 {
+    fn get_param(&mut self, mode: i64) -> i64 {
         // Position - 0, Immediate - 1
-        let value: i32;
+        let value: i64;
         match mode {
             0 => {
                 let position = self.memory[self.instruction_ptr] as usize;
@@ -122,7 +159,7 @@ impl Intcomp {
         value
     }
 
-    fn store_result(&mut self, result: i32, mode: i32) {
+    fn store_result(&mut self, result: i64, mode: i64) {
         // Position - 0, Immediate - 1
         let position_value = self.memory[self.instruction_ptr];
         self.instruction_ptr += 1;
@@ -132,30 +169,23 @@ impl Intcomp {
         } as usize;
         self.memory[res_location] = result;
     }
-
-    pub fn string_from_memory(self) -> String {
-        let vec_of_strings: Vec<_> = self.memory.iter().map(|s| s.to_string()).collect();
-        vec_of_strings.join(",")
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn test_intcomp_with_input(program: &str, input: i32) -> Vec<i32> {
-        let mut intcomp = Intcomp::from(program);
-        intcomp.input.push(input);
-        intcomp.execute();
-        intcomp.output
+    fn test_intcomp_with_input(program: &str, input: i64) -> Vec<i64> {
+        let intcomp = Intcomp::from(program);
+        let result = intcomp.run_with_input(vec![input]);
+        result.get_output()
     }
 
     #[test]
     fn tests_for_mode() {
         let execute_intcomp = |x| {
-            let mut comp = Intcomp::from(x);
-            comp.execute();
-            comp.string_from_memory()
+            let (_, string) = Intcomp::from(x).execute().get_memory();
+            string
         };
         assert_eq!("1002,4,3,4,99", execute_intcomp("1002,4,3,4,33"));
         assert_eq!("1101,100,-1,4,99", execute_intcomp("1101,100,-1,4,0"));

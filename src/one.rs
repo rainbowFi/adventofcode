@@ -13,14 +13,14 @@ pub fn run_b() {
     println!("Total fuel is {}", total_fuel)
 }
 
-fn find_total_fuel_for_modules(module_only: bool) -> i32 {
+fn find_total_fuel_for_modules(module_only: bool) -> i64 {
     let file = File::open("inputs/input_1.txt").expect("Unable to open file");
     let file = BufReader::new(file);
 
     let mut total_fuel = 0;
     for line in file.lines() {
         let line = line.expect("Unable to read line");
-        let module_mass: i32 = match line.trim().parse() {
+        let module_mass: i64 = match line.trim().parse() {
             Ok(num) => num,
             Err(_) => continue,
         };
@@ -35,7 +35,7 @@ fn find_total_fuel_for_modules(module_only: bool) -> i32 {
     total_fuel
 }
 
-fn calculate_module_fuel(mut mass: i32) -> i32 {
+fn calculate_module_fuel(mut mass: i64) -> i64 {
     let mut module_fuel = 0;
 
     loop {
@@ -49,7 +49,7 @@ fn calculate_module_fuel(mut mass: i32) -> i32 {
     }
 }
 
-fn calculate_fuel_for_mass(mass: i32) -> i32 {
+fn calculate_fuel_for_mass(mass: i64) -> i64 {
     (mass / 3) - 2
 }
 

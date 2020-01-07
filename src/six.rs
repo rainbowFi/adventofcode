@@ -12,7 +12,7 @@ pub fn run_b() {
     println!("6B: num orbits {}", num_orbits);
 }
 
-fn total_orbits(orbit_map: &str) -> i32 {
+fn total_orbits(orbit_map: &str) -> i64 {
     let orbit_map = read_map(orbit_map);
     let orbits = orbits_from_map(&orbit_map);
     let mut num_routes = 0;
@@ -24,7 +24,7 @@ fn total_orbits(orbit_map: &str) -> i32 {
     num_routes
 }
 
-fn path_length(orbit_map: &str) -> i32 {
+fn path_length(orbit_map: &str) -> i64 {
     let orbit_map = read_map(orbit_map);
     let orbits = orbits_from_map(&orbit_map);
 
@@ -37,7 +37,7 @@ fn path_length(orbit_map: &str) -> i32 {
         santa_path.pop();
     }
 
-    (our_path.len() + santa_path.len()) as i32
+    (our_path.len() + santa_path.len()) as i64
 }
 
 fn get_path(orbit_map: &HashMap<String, String>, start: String, end: String) -> Vec<String> {
@@ -80,7 +80,7 @@ fn orbits_from_map(orbit_map: &Vec<(String, String)>) -> HashMap<String, String>
     mapped_links
 }
 
-fn count_routes(orbits: &HashMap<String, String>, start: &String) -> i32 {
+fn count_routes(orbits: &HashMap<String, String>, start: &String) -> i64 {
     let mut num_routes = 0;
 
     if let Some(next_planet) = orbits.get(start) {
