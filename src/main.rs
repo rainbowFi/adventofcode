@@ -1,3 +1,4 @@
+mod eight;
 mod five;
 mod four;
 mod one;
@@ -21,4 +22,5 @@ fn main() {
     six::run_b();
     seven::run_a();
     seven::run_b();
+    eight::run_a();
 }
