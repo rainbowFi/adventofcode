@@ -23,4 +23,5 @@ fn main() {
     seven::run_a();
     seven::run_b();
     eight::run_a();
+    eight::run_b();
 }
