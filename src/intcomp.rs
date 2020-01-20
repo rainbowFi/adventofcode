@@ -22,7 +22,10 @@ impl IntResultCode {
 
     pub fn get_memory(&self) -> (Vec<i64>, String) {
         match self {
-            Completed(result) => { (result.memory.clone(), self.string_from_memory(&result.memory)) },
+            Completed(result) => (
+                result.memory.clone(),
+                self.string_from_memory(&result.memory),
+            ),
             MoreInputRequired(_) => panic!("No memory available"),
         }
     }
@@ -39,6 +42,7 @@ pub struct Intcomp {
     pub output: Vec<i64>,
     pub input: Vec<i64>,
     instruction_ptr: usize,
+    relative_base: i64,
 }
 
 impl Intcomp {
@@ -53,6 +57,7 @@ impl Intcomp {
             output: vec![],
             input: vec![],
             instruction_ptr: 0,
+            relative_base: 0,
         }
     }
 
@@ -101,7 +106,7 @@ impl Intcomp {
                         None => {
                             // Need to come back to this same instruction
                             self.instruction_ptr -= 1;
-                            return IntResultCode::MoreInputRequired(self)
+                            return IntResultCode::MoreInputRequired(self);
                         }
                     }
                 }
@@ -138,21 +143,35 @@ impl Intcomp {
                     let val_b = self.get_param(mode_b);
                     self.store_result(if val_a == val_b { 1 } else { 0 }, mode_c);
                 }
-                99 => return IntResultCode::Completed(IntResult { output: self.output.clone(), memory: self.memory.clone() }),
+                9 => {
+                    // Adjust relative base
+                    let val_a = self.get_param(mode_a);
+                    self.relative_base += val_a;
+                }
+                99 => {
+                    return IntResultCode::Completed(IntResult {
+                        output: self.output.clone(),
+                        memory: self.memory.clone(),
+                    })
+                }
                 _ => panic!("Unknown opcode {}", opcode),
             }
         }
     }
 
     fn get_param(&mut self, mode: i64) -> i64 {
-        // Position - 0, Immediate - 1
+        // Position - 0, Immediate - 1, Relative - 2
         let value: i64;
         match mode {
             0 => {
                 let position = self.memory[self.instruction_ptr] as usize;
-                value = self.memory[position];
+                value = self.memory.get(position).cloned().unwrap_or(0);
             }
             1 => value = self.memory[self.instruction_ptr],
+            2 => {
+                let position = (self.memory[self.instruction_ptr] + self.relative_base) as usize;
+                value = self.memory.get(position).cloned().unwrap_or(0);
+            }
             _ => panic!("Unknown parameter mode {}", mode),
         }
         self.instruction_ptr += 1;
@@ -160,13 +179,18 @@ impl Intcomp {
     }
 
     fn store_result(&mut self, result: i64, mode: i64) {
-        // Position - 0, Immediate - 1
+        // Position - 0, Immediate - 1, Relative - 2
         let position_value = self.memory[self.instruction_ptr];
         self.instruction_ptr += 1;
         let res_location = match mode {
             0 => position_value,
+            2 => position_value + self.relative_base,
             _ => panic!("Unknown parameter mode {}", mode),
         } as usize;
+
+        if res_location >= self.memory.len() {
+            self.memory.resize(res_location + 1, 0);
+        }
         self.memory[res_location] = result;
     }
 }
@@ -261,5 +285,28 @@ mod tests {
         assert_eq!(vec![999], test_intcomp_with_input("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99", 7));
         assert_eq!(vec![1000], test_intcomp_with_input("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99", 8));
         assert_eq!(vec![1001], test_intcomp_with_input("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99", 9));
+    }
+
+    #[test]
+    fn test_relative_base() {
+        let execute_intcomp = |x| Intcomp::from(x).execute().get_output();
+
+        assert_eq!(
+            vec![109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99],
+            execute_intcomp("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99")
+        );
+    }
+
+    #[test]
+    fn test_large_numbers() {
+        let execute_intcomp = |x| Intcomp::from(x).execute().get_output();
+        assert_eq!(
+            vec![1219070632396864],
+            execute_intcomp("1102,34915192,34915192,7,4,7,99,0")
+        );
+        assert_eq!(
+            vec![1125899906842624],
+            execute_intcomp("104,1125899906842624,99")
+        );
     }
 }
